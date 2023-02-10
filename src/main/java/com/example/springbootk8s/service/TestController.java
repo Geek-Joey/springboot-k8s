@@ -43,5 +43,10 @@ public class TestController {
         return aDefault;
     }
 
+    @PostMapping("/getPodList")
+    public String getPodList() {
+        return kubectlService.getPodList("default", "app=nginx");
+    }
+
 
 }

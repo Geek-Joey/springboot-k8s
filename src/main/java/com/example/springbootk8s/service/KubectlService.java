@@ -4,6 +4,7 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.example.springbootk8s.entity.DeployStatus;
+import com.example.springbootk8s.entity.PodStatus;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
@@ -18,6 +19,7 @@ import javax.annotation.Resource;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @author joey
@@ -173,5 +175,41 @@ public class KubectlService {
         return dateTime;
     }
 
+    /**
+     * Pod API: 根据名称空间和标签找到符合条件的容器
+     * @param namespace
+     * @param labelSelector
+     * @return
+     */
+    public String getPodList(String namespace,String labelSelector) {
+        try {
+            ApiClient client = k8sClient.createClient();
+            Configuration.setDefaultApiClient(client);
+            CoreV1Api api = new CoreV1Api();
+            List<V1Pod> pods = api.listNamespacedPod(namespace, null, null, null, null,
+                    labelSelector, null, null, null, null, null).getItems();
+            ArrayList<PodStatus> podStatusList = new ArrayList<>();
+            for (V1Pod pod : pods) {
+                PodStatus podStatus = new PodStatus();
+                V1PodStatus status = pod.getStatus();
+                V1ObjectMeta metadata = pod.getMetadata();
+                podStatus.setPodId(metadata.getUid());
+                podStatus.setPodName(metadata.getName());
+                podStatus.setPodIp(status.getPodIP());
+                podStatus.setHostIp(status.getHostIP());
+                podStatus.setPodStatus(status.getPhase());
+                OffsetDateTime OffsetDateTime = status.getStartTime();
+                DateTime createTime = transformTime(OffsetDateTime);
+                podStatus.setStartTime(createTime.toString());
+                long runtime = DateUtil.between(createTime, DateTime.now(), DateUnit.SECOND);
+                podStatus.setSeconds(runtime);
+                podStatusList.add(podStatus);
+            }
+            return podStatusList.toString();
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 }
