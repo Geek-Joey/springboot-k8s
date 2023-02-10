@@ -1,10 +1,13 @@
 package com.example.springbootk8s.service;
 
-import io.kubernetes.client.openapi.*;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.util.Yaml;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -15,6 +18,7 @@ import java.util.HashMap;
  * @author joey
  * @create 2023-02-09 10:08
  */
+@Slf4j
 @Service
 public class KubectlService {
     @Resource
@@ -86,13 +90,14 @@ public class KubectlService {
         String yaml = Yaml.dump(v1Deployment);
         System.out.println("--- deployment yaml --- \n" + yaml);
         try {
-            V1Deployment namespacedDeployment = appsV1Api.createNamespacedDeployment("default", v1Deployment, "true", null, null, null);
-            V1DeploymentStatus status = namespacedDeployment.getStatus();
-            return  status.toString();
+            V1Deployment namespacedDeployment = appsV1Api.createNamespacedDeployment("default", v1Deployment, "false", null, null, null);
+            if (namespacedDeployment != null) {
+                return "success";
+            }
         } catch (ApiException e) {
-            e.printStackTrace();
+            log.error("Create Deployment Failed：",e);
         }
-        return "";
+        return "fail";
     }
 
     /**
