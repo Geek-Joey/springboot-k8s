@@ -1,5 +1,9 @@
 package com.example.springbootk8s.service;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUnit;
+import cn.hutool.core.date.DateUtil;
+import com.example.springbootk8s.entity.DeployStatus;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
@@ -11,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -130,28 +135,42 @@ public class KubectlService {
         ApiClient client = k8sClient.createClient();
         Configuration.setDefaultApiClient(client);
         AppsV1Api appsV1Api = new AppsV1Api();
-
+        //返回类
+        DeployStatus deployStatus = new DeployStatus();
         try {
-            /**
-             * readNamespacedDeploymentStatus
-             * readNamespacedDeploymentStatusAsync
-             * readNamespacedDeploymentStatusCall
-             * readNamespacedDeploymentStatusWithHttpInfo
-             */
             V1Deployment v1Deployment = appsV1Api.readNamespacedDeploymentStatus(name,namespace,null);
+            V1ObjectMeta metadata = v1Deployment.getMetadata();
+            deployStatus.setDeploymentId(metadata.getUid());
+            deployStatus.setDeploymentName(metadata.getName());
             V1DeploymentStatus status = v1Deployment.getStatus();
-            return status.toString();
-
-//            ApiResponse<V1Deployment> deploymentStatus = appsV1Api.readNamespacedDeploymentStatusWithHttpInfo(name, namespace, null);
-//            int statusCode = deploymentStatus.getStatusCode();
-//            V1Deployment data = deploymentStatus.getData();
-//            return "statusCode: "+statusCode + ",data: " + data.toString();
+            Integer replicas = status.getReplicas();
+            Integer availableReplicas = status.getAvailableReplicas();
+            if (availableReplicas < replicas) {
+                deployStatus.setDeploymentStatus("运行失败");
+            } else {
+                deployStatus.setDeploymentStatus("运行中");
+            }
+            deployStatus.setReplicas(replicas);
+            deployStatus.setAvailableReplicas(replicas);
+            OffsetDateTime creationTimestamp = metadata.getCreationTimestamp();
+            DateTime createTime = transformTime(creationTimestamp);
+            deployStatus.setCrateTime(createTime.toString());
+            long runtime = DateUtil.between(createTime, DateTime.now(), DateUnit.SECOND);
+            deployStatus.setSeconds(runtime);
+            return deployStatus.toString();
 
         } catch (ApiException e) {
             e.printStackTrace();
         }
 
         return null;
+    }
+
+    public static DateTime transformTime(OffsetDateTime offsetDateTime) {
+        String createTime = DateUtil.format(offsetDateTime.toLocalDateTime(), "yyyy-MM-dd HH:mm:ss");
+        DateTime parse = DateUtil.parse(createTime);
+        DateTime dateTime = DateUtil.offsetHour(parse, 8);
+        return dateTime;
     }
 
 
