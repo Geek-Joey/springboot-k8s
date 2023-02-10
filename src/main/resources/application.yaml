@@ -1,0 +1,7 @@
+# 应用名称
+spring:
+  application:
+    name: springboot-k8s
+# 应用服务Web访问端口
+server:
+  port: 18080
