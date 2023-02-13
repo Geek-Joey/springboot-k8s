@@ -49,4 +49,9 @@ public class TestController {
     }
 
 
+    @PostMapping("/updateDeployment")
+    public String updateDeployment() {
+        return kubectlService.updateNginxDeployment();
+    }
+
 }

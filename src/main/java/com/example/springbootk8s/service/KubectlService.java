@@ -176,6 +176,31 @@ public class KubectlService {
     }
 
     /**
+     * 测试更新Nginx镜像
+     *  副本改为2
+     *  镜像nginx:1.7.9 升级为 nginx:1.9.5
+     * @return
+     */
+    public String updateNginxDeployment() {
+        ApiClient client = k8sClient.createClient();
+        Configuration.setDefaultApiClient(client);
+        AppsV1Api api = new AppsV1Api();
+        try {
+            V1Deployment body = api.readNamespacedDeployment("nginx-deployment", "default", null);
+            V1DeploymentSpec spec = body.getSpec();
+            spec.setReplicas(3);
+            V1Container container = spec.getTemplate().getSpec().getContainers().get(0);
+            container.setImage("nginx:1.9.5");
+            body.setSpec(spec);
+            V1Deployment v1Deployment = api.replaceNamespacedDeployment("nginx-deployment", "default", body, null, null, null, null);
+            return v1Deployment.getMetadata().getName();
+        } catch (ApiException e) {
+            log.error("Update Nginx Deployment：",e);
+        }
+        return null;
+    }
+
+    /**
      * Pod API: 根据名称空间和标签找到符合条件的容器
      * @param namespace
      * @param labelSelector
@@ -210,6 +235,50 @@ public class KubectlService {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static V1Deployment nginxDeployment() {
+        //TODO deployment 配置
+        V1Deployment v1Deployment = new V1Deployment();
+        //api版本
+        v1Deployment.setApiVersion("apps/v1");
+        //资源类型
+        v1Deployment.setKind("Deployment");
+        //元数据
+        V1ObjectMeta metadata = new V1ObjectMeta();
+        metadata.setName("nginx-deployment");
+        HashMap<String, String> labels = new HashMap<>();
+        labels.put("app","nginx");
+        metadata.setLabels(labels);
+        v1Deployment.setMetadata(metadata);
+        //详细信息
+        V1DeploymentSpec spec = new V1DeploymentSpec();
+        // -- 副本数
+        spec.setReplicas(2);
+        // -- 标签选择器
+        V1LabelSelector selector = new V1LabelSelector();
+        selector.setMatchLabels(labels);
+        spec.setSelector(selector);
+        // -- Pod模板
+        V1PodTemplateSpec template = new V1PodTemplateSpec();
+        //  -- Pod元数据
+        V1ObjectMeta template_meta = new V1ObjectMeta();
+        template_meta.setLabels(labels);
+        template.setMetadata(template_meta);
+        V1PodSpec podSpec = new V1PodSpec();
+        //  -- Pod容器信息
+        ArrayList<V1Container> containers = new ArrayList<>();
+        V1Container container = new V1Container();
+        container.setName("nginx");
+        container.setImage("nginx:1.9.5");
+        containers.add(container);
+        podSpec.setContainers(containers);
+        template.setSpec(podSpec);
+        spec.setTemplate(template);
+        v1Deployment.setSpec(spec);
+        String yaml = Yaml.dump(v1Deployment);
+        System.out.println("--- update deployment yaml --- \n" + yaml);
+        return v1Deployment;
     }
 
 }
