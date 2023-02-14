@@ -5,6 +5,7 @@ import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.example.springbootk8s.entity.DeployStatus;
 import com.example.springbootk8s.entity.PodStatus;
+import io.kubernetes.client.custom.V1Patch;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
@@ -198,6 +199,29 @@ public class KubectlService {
             log.error("Update Nginx Deployment：",e);
         }
         return null;
+    }
+
+    public Integer patchDeployment() {
+        ApiClient client = k8sClient.createClient();
+        Configuration.setDefaultApiClient(client);
+        AppsV1Api api = new AppsV1Api();
+        try {
+            V1Patch body = new V1Patch("{ \"op\": \"replace\", \"path\": \"spec/template/spec/containers/0/image\", \"value\": \"nginx:1.7.9\"}\n");
+            if (body == null) {
+                log.error("V1Patch Fail");
+            }
+            V1Deployment v1Deployment = api.patchNamespacedDeploymentStatus("nginx-deployment", "default", body, "true", null, null, null, true);
+            if (v1Deployment == null ) {
+                log.error("UpdatedReplicas Fail");
+            }
+            Integer updatedReplicas = v1Deployment.getStatus().getUpdatedReplicas();
+            log.info("updatedReplicas: {}",updatedReplicas);
+            return updatedReplicas;
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
     }
 
     /**
