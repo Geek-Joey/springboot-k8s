@@ -305,4 +305,28 @@ public class KubectlService {
         return v1Deployment;
     }
 
+    /**
+     * Deployment API: 根据名称空间列出所有的Deployment
+     * @param namespace
+     * @return
+     */
+    public ArrayList<String> listNamespacedDeployment(String namespace) {
+        ApiClient client = k8sClient.createClient();
+        Configuration.setDefaultApiClient(client);
+        AppsV1Api api = new AppsV1Api();
+        ArrayList<String> result = new ArrayList<>();
+        try {
+            V1DeploymentList list = api.listNamespacedDeployment(namespace, null, null, null, null, null, null, null, null, null, null);
+            List<V1Deployment> items = list.getItems();
+            for (V1Deployment item : items) {
+                String name = item.getMetadata().getName();
+                result.add(name);
+            }
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
 }

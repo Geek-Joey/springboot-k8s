@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 
 /**
  * @author joey
@@ -59,4 +60,9 @@ public class TestController {
         return kubectlService.patchDeployment();
     }
 
+    @PostMapping("listNamespacedDeployment")
+    public String listNamespacedDeployment() {
+        ArrayList<String> list = kubectlService.listNamespacedDeployment("default");
+        return list.toString();
+    }
 }
