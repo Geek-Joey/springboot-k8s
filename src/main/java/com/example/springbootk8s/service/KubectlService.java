@@ -201,16 +201,20 @@ public class KubectlService {
         return null;
     }
 
+    /**
+     * Patch Deployment
+     * @return
+     */
     public Integer patchDeployment() {
         ApiClient client = k8sClient.createClient();
         Configuration.setDefaultApiClient(client);
         AppsV1Api api = new AppsV1Api();
         try {
-            V1Patch body = new V1Patch("{ \"op\": \"replace\", \"path\": \"spec/template/spec/containers/0/image\", \"value\": \"nginx:1.7.9\"}\n");
+            V1Patch body = new V1Patch("{ \"op\": \"replace\", \"path\": \"spec/template/spec/containers/image\", \"value\": \"nginx:1.7.9\"}\n");
             if (body == null) {
                 log.error("V1Patch Fail");
             }
-            V1Deployment v1Deployment = api.patchNamespacedDeploymentStatus("nginx-deployment", "default", body, "true", null, null, null, true);
+            V1Deployment v1Deployment = api.patchNamespacedDeploymentStatus("nginx-deployment", "default", body, null, null, null, null, null);
             if (v1Deployment == null ) {
                 log.error("UpdatedReplicas Fail");
             }
