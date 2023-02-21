@@ -32,6 +32,46 @@ public class KubectlService {
     @Resource
     private K8sClient k8sClient;
 
+
+    /**
+     * 创建名称空间
+     * @return
+     */
+    public String createNamespace(){
+        ApiClient client = k8sClient.createClient();
+        Configuration.setDefaultApiClient(client);
+        CoreV1Api api = new CoreV1Api();
+        try {
+            V1NamespaceList v1NamespaceList = api.listNamespace(null, null, null, null, null, null, null, null, null, null);
+            List<V1Namespace> items = v1NamespaceList.getItems();
+            ArrayList<String> namespaceList = new ArrayList<>();
+            for (V1Namespace item : items) {
+                String name = item.getMetadata().getName();
+                namespaceList.add(name);
+            }
+            if (namespaceList.contains("test123")) {
+                return "创建Deployment成功！";
+            } else {
+                V1Namespace body = new V1Namespace();
+                body.setApiVersion("v1");
+                body.setKind("Namespace");
+                V1ObjectMeta metadata = new V1ObjectMeta();
+                metadata.setName("test123");
+                body.setMetadata(metadata);
+                V1Namespace namespace = api.createNamespace(body, null, null, null, null);
+                if (namespace != null) {
+                    return "创建Deployment成功！";
+                }else {
+                    return "创建Deployment失败！";
+                }
+
+            }
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
     public String listAllPods() {
         ApiClient client = k8sClient.createClient();
         Configuration.setDefaultApiClient(client);

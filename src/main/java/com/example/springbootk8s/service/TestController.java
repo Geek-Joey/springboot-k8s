@@ -60,9 +60,14 @@ public class TestController {
         return kubectlService.patchDeployment();
     }
 
-    @PostMapping("listNamespacedDeployment")
+    @PostMapping("/listNamespacedDeployment")
     public String listNamespacedDeployment() {
         ArrayList<String> list = kubectlService.listNamespacedDeployment("default");
         return list.toString();
+    }
+
+    @PostMapping("/createNamespace")
+    public String createNamespace() {
+        return kubectlService.createNamespace();
     }
 }
