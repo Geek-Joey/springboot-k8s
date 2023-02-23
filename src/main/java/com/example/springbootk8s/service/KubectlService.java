@@ -136,7 +136,7 @@ public class KubectlService {
         spec.setTemplate(template);
         v1Deployment.setSpec(spec);
         String yaml = Yaml.dump(v1Deployment);
-        System.out.println("--- deployment yaml --- \n" + yaml);
+        log.info("deployment yaml {} ",yaml);
         try {
             V1Deployment namespacedDeployment = appsV1Api.createNamespacedDeployment("default", v1Deployment, "false", null, null, null);
             if (namespacedDeployment != null) {
