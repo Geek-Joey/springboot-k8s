@@ -1,5 +1,6 @@
-package com.example.springbootk8s.service;
+package com.example.springbootk8s.controller;
 
+import com.example.springbootk8s.service.KubectlService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
