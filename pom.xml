@@ -77,6 +77,13 @@
             <version>1.6.4</version>
         </dependency>
 
+        <!--jsch 远程连接-->
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.55</version>
+        </dependency>
+
     </dependencies>
 
     <build>
